@@ -91,7 +91,9 @@ def crear_respaldo():
 
     CARPETA_RESPALDOS.mkdir(parents=True, exist_ok=True)
 
-    ruta_zip = CARPETA_RESPALDOS / "respaldo_contactos.zip"
+    fecha = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+
+    ruta_zip = CARPETA_RESPALDOS / f"respaldo_contactos_{fecha}.zip"
 
     tamaño_original = (
         os.stat(ARCHIVO).st_size
@@ -144,7 +146,7 @@ if __name__ == "__main__":
 
         print("----- VERIFICAR INTEGRIDAD SHA-256 -----")
 
-        
+
         if not ARCHIVO_HASH.exists():
 
             print("No existe un hash de referencia.")
