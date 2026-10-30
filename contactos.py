@@ -2,7 +2,6 @@ from pathlib import Path
 
 ARCHIVO = Path(__file__).resolve().parent / "datos" / "contactos.dat"
 
-
 TAM_ID = 8
 TAM_NOMBRE = 40
 TAM_TELEFONO = 18
@@ -96,7 +95,7 @@ def agregar_contacto(id, nombre, telefono, correo, ciudad):
     return numero_registro
 
 
-def leer_contacto(numero_registro):
+def leer_contacto(numero_registro, mostrar_posiciones=True):
 
     if type(numero_registro) is not int or numero_registro < 0:
         raise ValueError("Número de registro inválido.")
@@ -110,14 +109,16 @@ def leer_contacto(numero_registro):
 
         archivo.seek(posicion)
 
-        print("Posición inicial con tell():", archivo.tell())
+        if mostrar_posiciones:
+            print("Posición inicial con tell():", archivo.tell())
 
         datos = archivo.read(TAM_REGISTRO)
 
         if not datos:
             return None
 
-        print("Posición final con tell():", archivo.tell())
+        if mostrar_posiciones:
+            print("Posición final con tell():", archivo.tell())
 
         return convertir_registro(datos)
 

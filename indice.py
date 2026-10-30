@@ -1,9 +1,19 @@
 import json
 from pathlib import Path
 
-from contactos import ARCHIVO, TAM_REGISTRO
-from contactos import agregar_contacto, leer_contacto, modificar_registro
+from contactos import (
+    ARCHIVO,
+    TAM_REGISTRO,
+    agregar_contacto,
+    leer_contacto,
+    modificar_registro
+)
 
+from herramientas import (
+    ARCHIVO_HASH,
+    guardar_hash,
+    verificar_integridad
+)
 
 INDICE = Path(__file__).resolve().parent / "datos" / "indice.json"
 
@@ -77,6 +87,31 @@ def guardar_indice(indice):
     temporal.replace(INDICE)
 
 
+def comprobar_integridad():
+
+    if not ARCHIVO.exists():
+
+        if ARCHIVO_HASH.exists():
+            raise ValueError(
+                "Falta contactos.dat, pero existe un hash anterior."
+            )
+
+        return
+
+    integridad = verificar_integridad()
+
+    if integridad is False:
+        raise ValueError(
+            "ADVERTENCIA: El archivo de contactos fue modificado "
+            "fuera de la aplicación."
+        )
+
+    if integridad is None and ARCHIVO.stat().st_size > 0:
+        raise ValueError(
+            "No existe el hash de referencia de los contactos."
+        )
+
+
 def registrar_contacto(id, nombre, telefono, correo, ciudad):
 
     indice = cargar_indice()
@@ -86,6 +121,8 @@ def registrar_contacto(id, nombre, telefono, correo, ciudad):
     if codigo in indice:
         raise ValueError("Ya existe un contacto con ese ID.")
 
+    comprobar_integridad()
+
     numero = agregar_contacto(
         id, nombre, telefono, correo, ciudad
     )
@@ -93,12 +130,25 @@ def registrar_contacto(id, nombre, telefono, correo, ciudad):
     indice[codigo] = numero
 
     try:
+
         guardar_indice(indice)
+
+        guardar_hash()
 
     except OSError:
 
-        with open(ARCHIVO, "r+b") as archivo:
-            archivo.truncate(numero * TAM_REGISTRO)
+        try:
+            with open(ARCHIVO, "r+b") as archivo:
+                archivo.truncate(numero * TAM_REGISTRO)
+
+            indice.pop(codigo)
+            guardar_indice(indice)
+
+        except OSError as error_restauracion:
+            raise RuntimeError(
+                "No se pudo restaurar el registro. "
+                "Revise los archivos antes de continuar."
+            ) from error_restauracion
 
         raise
 
@@ -135,16 +185,50 @@ def modificar_contacto_por_id(id, nombre, telefono, correo, ciudad):
     if codigo not in indice:
         return False
 
+
+    comprobar_integridad()
+
     numero_registro = indice[codigo]
 
-    modificar_registro(
+    contacto_anterior = leer_contacto(
         numero_registro,
-        id,
-        nombre,
-        telefono,
-        correo,
-        ciudad
+        mostrar_posiciones=False
     )
+
+    if contacto_anterior is None or contacto_anterior["id"] != id:
+        raise ValueError("El índice no coincide con el contacto.")
+
+    try:
+
+        modificar_registro(
+            numero_registro,
+            id,
+            nombre,
+            telefono,
+            correo,
+            ciudad
+        )
+
+        guardar_hash()
+
+    except OSError:
+
+        try:
+            modificar_registro(
+                numero_registro,
+                contacto_anterior["id"],
+                contacto_anterior["nombre"],
+                contacto_anterior["telefono"],
+                contacto_anterior["correo"],
+                contacto_anterior["ciudad"]
+            )
+
+        except OSError as error_restauracion:
+            raise RuntimeError(
+                "No se pudo restaurar el contacto anterior."
+            ) from error_restauracion
+
+        raise
 
     return True
 
@@ -165,72 +249,69 @@ def mostrar_contacto(contacto):
 
 if __name__ == "__main__":
 
-    print("----- REGISTRAR CONTACTOS -----")
+    try:
 
-    contactos_prueba = [
-        (101, "Ana López", "5555-1234",
-         "ana@correo.com", "Quetzaltenango"),
+        print("----- VERIFICACIÓN INICIAL -----")
 
-        (102, "Carlos Pérez", "5555-5678",
-         "carlos@correo.com", "Guatemala"),
+        estado = verificar_integridad()
 
-        (103, "María García", "5555-9012",
-         "maria@correo.com", "Antigua Guatemala")
-    ]
-
-    for id, nombre, telefono, correo, ciudad in contactos_prueba:
-
-        if buscar_contacto_por_id(id) is None:
-
-            numero = registrar_contacto(
-                id, nombre, telefono, correo, ciudad
+        if estado is not True:
+            raise ValueError(
+                "No se puede continuar sin integridad verificada."
             )
 
-            print(f"Contacto {id} guardado en el registro {numero}")
+        print("Archivo íntegro: no se detectaron cambios.")
+
+        print("\n----- REGISTRAR NUEVO CONTACTO -----")
+
+        if buscar_contacto_por_id(104) is None:
+
+            numero = registrar_contacto(
+                104,
+                "Roberto Méndez",
+                "5555-4321",
+                "roberto@correo.com",
+                "Quetzaltenango"
+            )
+
+            print("Contacto registrado en la posición:", numero)
 
         else:
-            print(f"El contacto {id} ya está registrado.")
+            print("El contacto 104 ya está registrado.")
 
-    print("\n----- BUSCAR CONTACTO POR ID -----")
+        print(
+            "Integridad después de registrar:",
+            verificar_integridad()
+        )
 
-    contacto = buscar_contacto_por_id(103)
+        print("\n----- MODIFICAR CONTACTO -----")
 
-    if contacto is not None:
-        mostrar_contacto(contacto)
-    else:
-        print("Contacto no encontrado.")
+        modificado = modificar_contacto_por_id(
+            102,
+            "Carlos Pérez",
+            "5555-8888",
+            "carlos.nuevo@correo.com",
+            "Guatemala"
+        )
 
-    print("\n----- BUSCAR ID INEXISTENTE -----")
+        if modificado:
+            print("Contacto modificado correctamente.")
+        else:
+            print("Contacto no encontrado.")
 
-    contacto = buscar_contacto_por_id(999)
+        print("\n----- VERIFICAR CONTACTO -----")
 
-    if contacto is None:
-        print("El contacto con ID 999 no existe.")
+        contacto = buscar_contacto_por_id(102)
 
-    print("\n----- ÍNDICE ACTUAL -----")
+        if contacto is not None:
+            mostrar_contacto(contacto)
 
-    print(json.dumps(cargar_indice(), indent=4))
+        print("\n----- VERIFICACIÓN FINAL SHA-256 -----")
 
-    print("\n----- MODIFICAR CONTACTO POR ID -----")
+        if verificar_integridad() is True:
+            print("Archivo íntegro: SHA-256 actualizado correctamente.")
+        else:
+            print("ADVERTENCIA: La integridad no coincide.")
 
-    modificado = modificar_contacto_por_id(
-        102,
-        "Carlos Pérez",
-        "5555-7777",
-        "carlos.nuevo@correo.com",
-        "Guatemala"
-    )
-
-    if modificado:
-        print("Contacto modificado correctamente.")
-    else:
-        print("El contacto no existe.")
-
-    print("\n----- VERIFICAR MODIFICACIÓN -----")
-
-    contacto = buscar_contacto_por_id(102)
-
-    if contacto is not None:
-        mostrar_contacto(contacto)
-    else:
-        print("Contacto no encontrado.")
+    except (OSError, ValueError, RuntimeError) as error:
+        print("Error:", error)
