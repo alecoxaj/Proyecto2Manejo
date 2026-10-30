@@ -65,11 +65,11 @@ def convertir_registro(datos):
         return campo.decode("utf-8").strip()
 
     return {
-        "ID": int(leer_campo(TAM_ID)),
-        "Nombre": leer_campo(TAM_NOMBRE),
-        "Teléfono": leer_campo(TAM_TELEFONO),
-        "Correo": leer_campo(TAM_CORREO),
-        "Ciudad": leer_campo(TAM_CIUDAD)
+        "id": int(leer_campo(TAM_ID)),
+        "nombre": leer_campo(TAM_NOMBRE),
+        "telefono": leer_campo(TAM_TELEFONO),
+        "correo": leer_campo(TAM_CORREO),
+        "ciudad": leer_campo(TAM_CIUDAD)
     }
 
 
