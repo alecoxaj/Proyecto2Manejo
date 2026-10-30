@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 ARCHIVO = Path(__file__).resolve().parent / "datos" / "contactos.dat"
@@ -14,6 +13,7 @@ TAM_REGISTRO = 152
 
 
 def ajustar_campo(valor, tamaño):
+
     texto = str(valor).strip()
 
     if not texto or "\n" in texto or "\r" in texto:
@@ -31,7 +31,7 @@ def ajustar_campo(valor, tamaño):
 
 def crear_registro(id, nombre, telefono, correo, ciudad):
 
-    if not isinstance(id, int) or isinstance(id, bool):
+    if type(id) is not int:
         raise ValueError("El ID debe ser un número entero.")
 
     if id < 1 or id > 99999999:
@@ -98,7 +98,7 @@ def agregar_contacto(id, nombre, telefono, correo, ciudad):
 
 def leer_contacto(numero_registro):
 
-    if numero_registro < 0:
+    if type(numero_registro) is not int or numero_registro < 0:
         raise ValueError("Número de registro inválido.")
 
     if not ARCHIVO.exists():
@@ -122,23 +122,43 @@ def leer_contacto(numero_registro):
         return convertir_registro(datos)
 
 
-if __name__ == "__main__":
+def modificar_registro(numero_registro, id, nombre, telefono, correo, ciudad):
 
-    print("Tamaño de registro:", TAM_REGISTRO, "bytes")
+    if type(numero_registro) is not int or numero_registro < 0:
+        raise ValueError("Número de registro inválido.")
 
-    numero = agregar_contacto(
-        101,
-        "Ana López",
-        "5555-1234",
-        "ana@correo.com",
-        "Quetzaltenango"
+    nuevos_datos = crear_registro(
+        id, nombre, telefono, correo, ciudad
     )
 
-    print("Contacto guardado en el registro:", numero)
+    posicion = numero_registro * TAM_REGISTRO
 
-    contacto = leer_contacto(numero)
+    with open(ARCHIVO, "r+b") as archivo:
 
-    print("\nCONTACTO ENCONTRADO:")
+        archivo.seek(0, 2)
+        tamaño_total = archivo.tell()
 
-    for campo, valor in contacto.items():
-        print(f"{campo}: {valor}")
+        if tamaño_total % TAM_REGISTRO != 0:
+            raise ValueError("El archivo tiene un tamaño inválido.")
+
+        if posicion + TAM_REGISTRO > tamaño_total:
+            raise ValueError("El registro no existe.")
+
+        archivo.seek(posicion)
+
+        datos_actuales = archivo.read(TAM_REGISTRO)
+
+        contacto_actual = convertir_registro(datos_actuales)
+
+        if contacto_actual["id"] != id:
+            raise ValueError("El ID no coincide con el registro.")
+
+        archivo.seek(posicion)
+
+        print("Posición inicial con tell():", archivo.tell())
+
+        archivo.write(nuevos_datos)
+
+        print("Posición final con tell():", archivo.tell())
+
+    return True

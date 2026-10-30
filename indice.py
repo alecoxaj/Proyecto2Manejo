@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 from contactos import ARCHIVO, TAM_REGISTRO
-from contactos import agregar_contacto, leer_contacto
+from contactos import agregar_contacto, leer_contacto, modificar_registro
 
 
 INDICE = Path(__file__).resolve().parent / "datos" / "indice.json"
@@ -41,7 +41,6 @@ def cargar_indice():
             "El índice no coincide con la cantidad de contactos."
         )
 
-    # Verificamos que las posiciones sean válidas.
     posiciones = []
 
     for codigo, numero in indice.items():
@@ -97,6 +96,7 @@ def registrar_contacto(id, nombre, telefono, correo, ciudad):
         guardar_indice(indice)
 
     except OSError:
+
         with open(ARCHIVO, "r+b") as archivo:
             archivo.truncate(numero * TAM_REGISTRO)
 
@@ -124,6 +124,43 @@ def buscar_contacto_por_id(id):
         )
 
     return contacto
+
+
+def modificar_contacto_por_id(id, nombre, telefono, correo, ciudad):
+
+    indice = cargar_indice()
+
+    codigo = str(id)
+
+    if codigo not in indice:
+        return False
+
+    numero_registro = indice[codigo]
+
+    modificar_registro(
+        numero_registro,
+        id,
+        nombre,
+        telefono,
+        correo,
+        ciudad
+    )
+
+    return True
+
+
+def mostrar_contacto(contacto):
+
+    etiquetas = {
+        "id": "ID",
+        "nombre": "Nombre",
+        "telefono": "Teléfono",
+        "correo": "Correo",
+        "ciudad": "Ciudad"
+    }
+
+    for campo, valor in contacto.items():
+        print(f"{etiquetas[campo]}: {valor}")
 
 
 if __name__ == "__main__":
@@ -159,21 +196,9 @@ if __name__ == "__main__":
     contacto = buscar_contacto_por_id(103)
 
     if contacto is not None:
-
-        etiquetas = {
-            "id": "ID",
-            "nombre": "Nombre",
-            "telefono": "Teléfono",
-            "correo": "Correo",
-            "ciudad": "Ciudad"
-        }
-
-        for campo, valor in contacto.items():
-            print(f"{etiquetas[campo]}: {valor}")
-
+        mostrar_contacto(contacto)
     else:
         print("Contacto no encontrado.")
-
 
     print("\n----- BUSCAR ID INEXISTENTE -----")
 
@@ -185,3 +210,27 @@ if __name__ == "__main__":
     print("\n----- ÍNDICE ACTUAL -----")
 
     print(json.dumps(cargar_indice(), indent=4))
+
+    print("\n----- MODIFICAR CONTACTO POR ID -----")
+
+    modificado = modificar_contacto_por_id(
+        102,
+        "Carlos Pérez",
+        "5555-7777",
+        "carlos.nuevo@correo.com",
+        "Guatemala"
+    )
+
+    if modificado:
+        print("Contacto modificado correctamente.")
+    else:
+        print("El contacto no existe.")
+
+    print("\n----- VERIFICAR MODIFICACIÓN -----")
+
+    contacto = buscar_contacto_por_id(102)
+
+    if contacto is not None:
+        mostrar_contacto(contacto)
+    else:
+        print("Contacto no encontrado.")
