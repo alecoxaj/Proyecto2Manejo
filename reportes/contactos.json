@@ -9,7 +9,7 @@
     {
         "id": 102,
         "nombre": "Carlos Pérez",
-        "telefono": "5555-7777",
+        "telefono": "5555-8888",
         "correo": "carlos.nuevo@correo.com",
         "ciudad": "Guatemala"
     },
@@ -19,5 +19,19 @@
         "telefono": "5555-9012",
         "correo": "maria@correo.com",
         "ciudad": "Antigua Guatemala"
+    },
+    {
+        "id": 104,
+        "nombre": "Roberto Méndez",
+        "telefono": "5555-4321",
+        "correo": "roberto@correo.com",
+        "ciudad": "Quetzaltenango"
+    },
+    {
+        "id": 105,
+        "nombre": "Fátima Sandoval",
+        "telefono": "3421-0927",
+        "correo": "fsandoval@gmail.com",
+        "ciudad": "Xela"
     }
 ]
