@@ -423,7 +423,7 @@ class VentanaPrincipal(QMainWindow):
         fila = self.tabla.currentRow()
         if fila < 0:
             QMessageBox.warning(
-                self, "Seleccionar contacto", "Primero seleccione un contacto de la tabla."
+                self, "Seleccionar contacto", "Primero selecciona un contacto de la tabla."
             )
             return
         try:
