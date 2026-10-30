@@ -20,7 +20,18 @@ INDICE = Path(__file__).resolve().parent / "datos" / "indice.json"
 
 def cargar_indice():
 
-    tamaño = ARCHIVO.stat().st_size if ARCHIVO.exists() else 0
+    if not ARCHIVO.exists():
+
+        if INDICE.exists() or ARCHIVO_HASH.exists():
+            raise FileNotFoundError(
+                "No se encontró contactos.dat. "
+                "Verifica que el archivo exista en la carpeta datos."
+            )
+
+        return {}
+
+        # Obtenemos el tamaño del archivo de contactos.
+    tamaño = ARCHIVO.stat().st_size
 
     if tamaño % TAM_REGISTRO != 0:
         raise ValueError("El archivo de contactos tiene un tamaño inválido.")
