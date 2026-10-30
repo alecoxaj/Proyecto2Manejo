@@ -1,0 +1,23 @@
+[
+    {
+        "id": 101,
+        "nombre": "Ana López",
+        "telefono": "5555-1234",
+        "correo": "ana@correo.com",
+        "ciudad": "Quetzaltenango"
+    },
+    {
+        "id": 102,
+        "nombre": "Carlos Pérez",
+        "telefono": "5555-7777",
+        "correo": "carlos.nuevo@correo.com",
+        "ciudad": "Guatemala"
+    },
+    {
+        "id": 103,
+        "nombre": "María García",
+        "telefono": "5555-9012",
+        "correo": "maria@correo.com",
+        "ciudad": "Antigua Guatemala"
+    }
+]
