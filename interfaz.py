@@ -354,7 +354,23 @@ class VentanaPrincipal(QMainWindow):
             control.setChecked(indice == numero)
 
     def mostrar_error(self, error):
-        QMessageBox.critical(self, "Error", str(error))
+        if isinstance(error, PermissionError):
+
+            QMessageBox.critical(
+                self,
+                "Permiso denegado",
+                "No se pudo completar la operación porque el archivo "
+                "no tiene los permisos necesarios de lectura o escritura.\n\n"
+                "Verifica que contactos.dat no esté configurado "
+                "como 'Solo lectura'."
+            )
+
+        else:
+            QMessageBox.critical(
+                self,
+                "Error",
+                str(error)
+            )
 
     def colocar_contactos(self, contactos):
         self.tabla.setRowCount(len(contactos))
@@ -421,22 +437,57 @@ class VentanaPrincipal(QMainWindow):
 
     def modificar_contacto(self, *_):
         fila = self.tabla.currentRow()
+
         if fila < 0:
             QMessageBox.warning(
-                self, "Seleccionar contacto", "Primero selecciona un contacto de la tabla."
+                self,
+                "Seleccionar contacto",
+                "Primero selecciona un contacto de la tabla."
             )
             return
+
         try:
             id_contacto = int(self.tabla.item(fila, 0).text())
+
             contacto = buscar_contacto_por_id(id_contacto)
+
             if contacto is None:
                 raise ValueError("El contacto ya no existe.")
+
             formulario = FormularioContacto(self, contacto)
+
             if formulario.exec() != QDialog.Accepted:
                 return
-            modificar_contacto_por_id(**formulario.datos())
-            self.actualizar_tabla()
-            QMessageBox.information(self, "Cambios guardados", "Contacto modificado correctamente.")
+
+            nuevos_datos = formulario.datos()
+
+            if contacto == nuevos_datos:
+                QMessageBox.information(
+                    self,
+                    "Sin cambios",
+                    "No se detectaron cambios en la información del contacto."
+                )
+                return
+
+            modificado = modificar_contacto_por_id(**nuevos_datos)
+
+            if modificado:
+
+                self.actualizar_tabla()
+
+                QMessageBox.information(
+                    self,
+                    "Cambios guardados",
+                    "Contacto modificado correctamente."
+                )
+
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Contacto no encontrado",
+                    "El contacto ya no existe."
+                )
+
         except Exception as error:
             self.mostrar_error(error)
 
