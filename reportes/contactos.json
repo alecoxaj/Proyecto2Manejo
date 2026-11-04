@@ -33,5 +33,12 @@
         "telefono": "3421-0927",
         "correo": "fsandoval@gmail.com",
         "ciudad": "Xela"
+    },
+    {
+        "id": 106,
+        "nombre": "Katerin Guerra",
+        "telefono": "5421-6531",
+        "correo": "katguerra@gmail.com",
+        "ciudad": "Jalapa"
     }
 ]
